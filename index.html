@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Hair Tracker Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-panna: #fdfcfb;
+            --azzurro-polvere: #d6e4f0;
+            --azzurro-leggero: #f0f7ff;
+            --lavanda: #e3dff2;
+            --pervinca: #b8c1ec;
+            --text-dark: #2d3436;
+            --text-light: #9aa0a6;
+            --white: #ffffff;
+            --shadow-soft: 0 8px 30px rgba(0,0,0,0.04);
+            --radius: 20px;
+            
+            /* Colori Calendario */
+            --color-danger: #ff7675;  
+            --color-warning: #fdcb6e; 
+            --color-success: #27ae60; 
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-panna); color: var(--text-dark); margin: 0; padding: 0; line-height: 1.6; }
+        
+        #app { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            padding: max(30px, env(safe-area-inset-top)) 20px calc(150px + env(safe-area-inset-bottom)) 20px; 
+        }
+        
+        header { margin-bottom: 25px; }
+        h1 { font-weight: 300; font-size: 1.8rem; color: var(--pervinca); margin: 0; }
+        h2 { font-size: 1.2rem; font-weight: 500; margin-bottom: 15px; }
+
+        .page { display: none; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card { background: var(--white); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow-soft); border: 1px solid rgba(184, 193, 236, 0.2); }
+        .btn-submit, .btn-action { border: none; padding: 16px; border-radius: 15px; width: 100%; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+        .btn-submit { background: var(--pervinca); color: white; font-weight: 600; margin-top: 10px; }
+        .btn-action { background: var(--azzurro-polvere); color: var(--text-dark); font-weight: 600; padding: 12px; }
+        .btn-submit:active, .btn-action:active { transform: scale(0.98); }
+
+        /* Aree di tocco icone ingrandite */
+        .icon-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.4rem; padding: 12px; color: var(--text-light);
+            transition: 0.2s; border-radius: 50%;
+        }
+        .icon-btn.edit { color: var(--text-dark); }
+        .icon-btn.delete { color: var(--color-danger); }
+        .icon-btn:active { background: rgba(0,0,0,0.05); }
+
+        /* Bottoni "Gestisci" per Smartphone */
+        .btn-square {
+            background: var(--white); border: 1px solid rgba(184, 193, 236, 0.3); border-radius: var(--radius);
+            padding: 20px 25px; font-size: 1.15rem; font-weight: 600; color: var(--text-dark); cursor: pointer;
+            box-shadow: var(--shadow-soft); transition: 0.2s; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 20px;
+        }
+        .btn-square i { font-size: 2.2rem; color: var(--pervinca); margin: 0; }
+        .btn-square:active { transform: scale(0.98); }
+
+        input, textarea { width: 100%; padding: 12px 15px; margin-top: 8px; margin-bottom: 15px; border: 1px solid var(--azzurro-polvere); border-radius: 12px; background: var(--bg-panna); font-size: 1rem; font-family: inherit; }
+
+        .custom-select {
+            width: 100%; appearance: none; background-color: var(--white);
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b8c1ec' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 15px center; background-size: 18px;
+            border: 2px solid var(--azzurro-polvere); padding: 16px 20px; border-radius: 16px;
+            font-size: 1.05rem; font-weight: 600; color: var(--text-dark); margin-bottom: 20px;
+            cursor: pointer; box-shadow: var(--shadow-soft);
+        }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav {
+            position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 350px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            display: flex; justify-content: space-around; align-items: center; padding: 12px 20px; border-radius: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); z-index: 1000;
+        }
+        .nav-item { color: var(--text-light); text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.3s; padding: 10px; }
+        .nav-item i { font-size: 1.6rem; }
+        .nav-item.active { color: var(--pervinca); }
+        
+        .nav-center-btn {
+            background: var(--bg-panna); color: var(--text-light); border: 3px solid var(--text-light); border-radius: 50%;
+            width: 75px; height: 75px; display: flex; justify-content: center; align-items: center;
+            transform: translateY(-25px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05); text-decoration: none; transition: 0.2s;
+        }
+        .nav-center-btn i { font-size: 2.2rem; }
+        .nav-center-btn.active { background: var(--lavanda); color: var(--pervinca); border-color: var(--pervinca); box-shadow: 0 8px 20px rgba(184, 193, 236, 0.4); }
+
+        .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 15px; background: var(--bg-panna); padding: 10px; border-radius: 12px; border: 1px solid var(--azzurro-polvere); }
+        .emoji-item { text-align: center; font-size: 1.5rem; padding: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .emoji-item.selected { background: var(--azzurro-polvere); border-color: var(--pervinca); transform: scale(1.1); }
+
+        /* Calendar */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; margin-bottom: 15px; }
+        .cal-nav { background: none; border: none; font-size: 1.4rem; color: var(--pervinca); cursor: pointer; padding: 15px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
+        .calendar-day { 
+            aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            font-size: 0.9rem; border-radius: 12px; cursor: pointer; position: relative; background: var(--bg-panna); border: 2.5px solid transparent; transition: 0.2s;
+        }
+        .calendar-day.today { font-weight: bold; background: var(--azzurro-leggero); border: 1.5px solid #d1e3f8; }
+        .dots { display: flex; gap: 3px; margin-top: 4px; height: 6px; justify-content: center; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        .wash-banner { background: var(--azzurro-polvere); border-radius: 12px; padding: 12px; font-size: 0.9rem; margin-bottom: 15px; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center;}
+        .wash-banner > div { text-align: center; flex: 1; }
+        .wash-banner-divider { width: 1px; background: var(--pervinca); height: 35px; opacity: 0.5; }
+
+        /* Modals */
+        .modal-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); 
+            display: none; align-items: flex-end; justify-content: center; z-index: 2000; 
+            padding-bottom: max(40px, env(safe-area-inset-bottom)); 
+        }
+        .modal-content { background: white; width: 95%; max-width: 500px; padding: 25px; border-radius: 30px; max-height: 85vh; overflow-y: auto; position: relative; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-close { position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; padding: 10px; color: var(--text-light); cursor: pointer; }
+
+        #onboarding-modal { align-items: center; z-index: 3000; padding-bottom: 0; }
+        
+        .checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .check-container { display: flex; align-items: center; background: var(--bg-panna); padding: 12px; border-radius: 10px; font-size: 0.95rem; border: 1px solid var(--azzurro-polvere); cursor: pointer; }
+        .check-container input { width: auto; margin: 0 10px 0 0; }
+        .palette { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .color-swatch { width: 35px; height: 35px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
+        .color-swatch.selected { border-color: var(--text-dark); transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <header><h1 id="view-title">Statistiche</h1></header>
+
+    <main id="view-dashboard" class="page active">
+        <div class="card" style="background: var(--lavanda);">
+            <h3 id="greeting-title" style="margin-top:0; color: var(--pervinca);"></h3>
+            <p id="greeting-text" style="font-size: 0.95rem; color: var(--text-dark); margin-bottom: 0;"></p>
+        </div>
+        <div id="dash-list"></div>
+    </main>
+
+    <main id="view-calendar" class="page">
+        <div class="wash-banner" id="wash-stats-banner" style="display:none;">
+            <div><i class="fas fa-shower" style="color:var(--pervinca); margin-bottom:4px;"></i><br>Media Mese<br><strong id="avg-month">-</strong></div>
+            <div class="wash-banner-divider"></div>
+            <div><i class="fas fa-calendar-alt" style="color:var(--pervinca); margin-bottom:4px;"></i><br>Media Totale<br><strong id="avg-total">-</strong></div>
+        </div>
+        
+        <div class="card">
+            <div class="cal-header">
+                <button class="cal-nav" onclick="app.changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                <div id="calendar-month-name" style="font-size: 1.1rem;"></div>
+                <button class="cal-nav" onclick="app.changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(7, 1fr); text-align:center; font-size:0.75rem; color:var(--text-light); margin-bottom:8px; font-weight:bold;">
+                <div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div>
+            </div>
+            <div class="calendar-grid" id="calendar-body"></div>
+        </div>
+    </main>
+
+    <main id="view-manage" class="page">
+        <div id="manage-main" style="display: flex; flex-direction: column; gap: 15px;">
+            <button class="btn-square" onclick="app.switchManage('treatments')">
+                <i class="fas fa-magic"></i>
+                <span>Gestisci Trattamenti</span>
+            </button>
+            <button class="btn-square" onclick="app.switchManage('products')">
+                <i class="fas fa-spray-can"></i>
+                <span>Gestisci Prodotti</span>
+            </button>
+        </div>
+
+        <div id="manage-treatments" style="display:none">
+            <button onclick="app.switchManage('main')" style="border:none; background:none; color:var(--pervinca); margin-bottom:15px; font-size:1.1rem; cursor:pointer;"><i class="fas fa-arrow-left"></i> Indietro</button>
+            <div class="card">
+                <h2 id="treat-form-title">Crea Trattamento</h2>
+                <input type="text" id="treat-name" placeholder="Nome (es. Lavaggio)">
+                <label style="font-size:0.9rem; color:var(--text-light); display:flex; align-items:center; margin-bottom:15px;"><input type="checkbox" id="treat-is-wash" style="width:auto; margin-right:10px;"> Lavaggio principale</label>
+                <label>Icona</label>
+                <div id="treat-emoji-grid" class="emoji-grid"></div>
+                <label>Colore</label>
+                <div class="palette" id="treat-colors"></div>
+                <div id="section-builder-container"></div>
+                <button onclick="app.addSectionToBuilder()" style="background:none; border: 2px dashed var(--pervinca); width:100%; padding:15px; border-radius:10px; margin-bottom:15px; font-weight:600;">+ Sezione Checkbox</button>
+                <button class="btn-submit" id="btn-save-treat" onclick="app.saveTreatment()">Salva Trattamento</button>
+            </div>
+            <div id="treatments-list"></div>
+        </div>
+
+        <div id="manage-products" style="display:none">
+            <button onclick="app.switchManage('main')" style="border:none; background:none; color:var(--pervinca); margin-bottom:15px; font-size:1.1rem; cursor:pointer;"><i class="fas fa-arrow-left"></i> Indietro</button>
+            <div class="card">
+                <h2>Nuovo Prodotto</h2>
+                <input type="text" id="prod-name" placeholder="Nome Prodotto">
+                <input type="text" id="prod-brand" placeholder="Marca">
+                <label>Icona</label>
+                <div id="prod-emoji-grid" class="emoji-grid"></div>
+                <label>Categorie Compatibili</label>
+                <div class="checkbox-group" id="prod-treatments-checkboxes" style="margin-top:10px;"></div>
+                <button class="btn-submit" onclick="app.saveProduct()">Salva Prodotto</button>
+            </div>
+            <div id="products-list"></div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="app.navigate('dashboard', event)"><i class="fas fa-chart-pie"></i></a>
+        <a href="#" class="nav-center-btn" onclick="app.navigate('calendar', event)"><i class="fas fa-calendar-alt"></i></a>
+        <a href="#" class="nav-item" onclick="app.navigate('manage', event)"><i class="fas fa-cog"></i></a>
+    </nav>
+</div>
+
+<div id="modal" class="modal-overlay" onclick="if(event.target === this) this.style.display='none'">
+    <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('modal').style.display='none'">&times;</button>
+        <h2 id="modal-date-title" style="text-transform:capitalize; margin-top:5px;">Data</h2>
+        <div id="modal-existing-logs"></div>
+        <div style="border-top: 2px dashed var(--azzurro-polvere); padding-top: 25px; margin-top:20px;">
+            <h3 style="margin-top:0; color:var(--pervinca);">+ Registra Nuova Attività</h3>
+            <select id="reg-treatment-select" class="custom-select" onchange="app.renderDynamicRegisterForm()"></select>
+            <div id="reg-dynamic-content"></div>
+        </div>
+    </div>
+</div>
+
+<div id="onboarding-modal" class="modal-overlay">
+    <div class="modal-content">
+        <i class="fas fa-magic" style="font-size: 3.5rem; color: var(--pervinca); margin-bottom: 15px;"></i>
+        <h2>Benvenuta!</h2>
+        <p>Inserisci il tuo nome per iniziare.</p>
+        <input type="text" id="user-name-input" placeholder="Il tuo nome" style="text-align: center; font-size:1.2rem;">
+        <button class="btn-submit" onclick="app.saveName()">Inizia</button>
+    </div>
+</div>
+
+<script>
+const TREAT_EMOJIS = ['🚿','🛁','✂️','💇‍♀️','💆‍♀️','🧖‍♀️','🪮','💈','🥣','🧴','💅','🔫']; 
+const PROD_EMOJIS = ['🧴','🧼','🫧','💊','🥥','🍯','🥑','🍋','🌸','🧽','💦','🥣'];
+
+const MESSAGES_SUCCESS = ["Bravissima! Ottimo ritmo di pulizia. ✨", "I tuoi capelli ringraziano per questo intervallo perfetto. 🌿", "Ottima gestione della cute! 💧"];
+const MESSAGES_ALERT = ["Attenzione! Li stai lavando troppo spesso. 🚿", "Prova a resistere un giorno in più per proteggere la cute. ⚠️", "Rallenta! Troppi lavaggi seccano i capelli. 🥥"];
+
+const app = {
+    db: JSON.parse(localStorage.getItem('hair_tracker_db')) || { userName: null, treatments: [], products: [], logs: [] },
+    selectedColor: '',
+    selectedTreatEmoji: '🚿',
+    selectedProdEmoji: '🧴',
+    calendarDate: new Date(), 
+    selectedDateForLog: null,
+    editingTreatId: null,
+
+    init() {
+        const now = new Date();
+        this.calendarDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        if(!this.db.userName) document.getElementById('onboarding-modal').style.display = 'flex';
+        this.renderEmojiGrids();
+        this.renderAll();
+    },
+
+    save() {
+        localStorage.setItem('hair_tracker_db', JSON.stringify(this.db));
+        this.renderAll();
+    },
+
+    saveName() {
+        const name = document.getElementById('user-name-input').value.trim();
+        if(!name) return;
+        this.db.userName = name;
+        document.getElementById('onboarding-modal').style.display = 'none';
+        this.save();
+    },
+
+    navigate(view, e) {
+        if(e) e.preventDefault();
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item, .nav-center-btn').forEach(n => n.classList.remove('active'));
+        document.getElementById(`view-${view}`).classList.add('active');
+        if(e) e.currentTarget.classList.add('active');
+        document.getElementById('view-title').innerText = (view === 'dashboard') ? 'Statistiche' : view.charAt(0).toUpperCase() + view.slice(1);
+        this.renderAll();
+    },
+
+    formatAverage(avgDays) {
+        if (avgDays === 0) return "Dati insufficienti";
+        if (avgDays < 30) return `ogni ${avgDays.toFixed(1)} giorni`;
+        const months = Math.floor(avgDays / 30);
+        const remainingDays = avgDays % 30;
+        let result = `ogni ${months} mes${months > 1 ? 'i' : 'e'}`;
+        if(remainingDays > 0) result += ` e ${remainingDays.toFixed(1)} gg`;
+        return result;
+    },
+
+    // --- DASHBOARD ---
+    renderDashboard() {
+        const name = this.db.userName || "Bellezza";
+        document.getElementById('greeting-title').innerText = `Ciao ${name} 👋`;
+        const washT = this.db.treatments.find(t => t.isWash);
+        const textEl = document.getElementById('greeting-text');
+        
+        if(washT) {
+            const washLogs = this.db.logs.filter(l => l.treatId == washT.id).sort((a,b) => new Date(b.date) - new Date(a.date));
+            if(washLogs.length > 1) {
+                const today = new Date(); today.setHours(0,0,0,0);
+                const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 7);
+                let gaps = [];
+                for(let i=0; i < washLogs.length - 1; i++) {
+                    const d1 = new Date(washLogs[i].date);
+                    if(d1 >= sevenDaysAgo) gaps.push((d1 - new Date(washLogs[i+1].date)) / 86400000);
+                }
+                if(gaps.length) {
+                    const avg = gaps.reduce((a,b)=>a+b,0) / gaps.length;
+                    const pool = (avg >= 3) ? MESSAGES_SUCCESS : MESSAGES_ALERT;
+                    textEl.innerHTML = `<strong>Media 7gg: ${avg.toFixed(1)}gg.</strong><br>${pool[Math.floor(Math.random()*pool.length)]}`;
+                } else { textEl.innerText = "Monitora i tuoi lavaggi questa settimana! 🚿"; }
+            } else { textEl.innerText = "Benvenuta! Inizia a registrare i tuoi lavaggi. 🛁"; }
+        } else { textEl.innerText = "Imposta un 'Lavaggio principale' in Gestisci."; }
+
+        const list = document.getElementById('dash-list');
+        list.innerHTML = '';
+        this.db.treatments.sort((a,b)=>b.isWash-a.isWash).forEach(t => {
+            const logs = this.db.logs.filter(l => l.treatId == t.id).sort((a,b) => new Date(a.date) - new Date(b.date));
+            let stats = "Mai eseguito";
+            let avgLabel = "Dati insufficienti";
+            
+            if(logs.length) {
+                const diff = Math.floor((new Date() - new Date(logs[logs.length-1].date)) / 86400000);
+                stats = diff === 0 ? "Oggi" : (diff === 1 ? "Ieri" : `${diff}gg fa`);
+                
+                if(logs.length > 1) {
+                    let total = 0;
+                    for(let i=1; i<logs.length; i++) total += (new Date(logs[i].date) - new Date(logs[i-1].date)) / 86400000;
+                    avgLabel = this.formatAverage(total/(logs.length-1));
+                }
+            }
+            list.innerHTML += `<div class="card" style="border-left: 6px solid ${t.color}">
+                <div style="font-size:1.2rem; font-weight:600">${t.emoji} ${t.name}</div>
+                <div style="font-size:0.95rem; margin-top:5px; color:var(--text-dark)">Ultima volta: <strong>${stats}</strong> | Media: <strong>${avgLabel}</strong></div>
+            </div>`;
+        });
+    },
+
+    // --- CALENDAR ---
+    changeMonth(dir) {
+        this.calendarDate.setMonth(this.calendarDate.getMonth() + dir);
+        this.renderCalendar();
+    },
+
+    getBorderColor(dateStr) {
+        const washT = this.db.treatments.find(t => t.isWash);
+        if(!washT) return 'transparent';
+        const dayLogs = this.db.logs.filter(l => l.date === dateStr && l.treatId == washT.id);
+        if(dayLogs.length >= 2) return 'var(--color-danger)';
+        if(dayLogs.length === 0) return 'transparent';
+        
+        const allWashes = this.db.logs.filter(l => l.treatId == washT.id).sort((a,b) => new Date(a.date) - new Date(b.date));
+        const idx = allWashes.findIndex(l => l.date === dateStr);
+        if(idx <= 0) return 'transparent';
+        
+        const gap = (new Date(allWashes[idx].date) - new Date(allWashes[idx-1].date)) / 86400000;
+        if(gap <= 1) return 'var(--color-danger)';
+        if(gap === 2) return 'var(--color-warning)';
+        return 'var(--color-success)';
+    },
+
+    renderCalendar() {
+        const body = document.getElementById('calendar-body');
+        const year = this.calendarDate.getFullYear();
+        const month = this.calendarDate.getMonth();
+        const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
+        const banner = document.getElementById('wash-stats-banner');
+
+        document.getElementById('calendar-month-name').innerText = this.calendarDate.toLocaleString('it-IT', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
+        
+        // Logica per calcolo esatto della media nel mese visualizzato
+        const washT = this.db.treatments.find(t => t.isWash);
+        if(washT) {
+            const today = new Date();
+            let daysToConsider = 0;
+            if (year === today.getFullYear() && month === today.getMonth()) {
+                daysToConsider = today.getDate();
+            } else if (new Date(year, month, 1) < today) {
+                daysToConsider = new Date(year, month + 1, 0).getDate();
+            }
+
+            const monthLogs = this.db.logs.filter(l => l.treatId == washT.id && l.date.startsWith(monthPrefix));
+            const avgMonth = (daysToConsider > 0 && monthLogs.length > 0) ? (daysToConsider / monthLogs.length) : 0;
+            
+            // Logica media totale (basata sui gap)
+            const allWashes = this.db.logs.filter(l => l.treatId == washT.id).sort((a,b) => new Date(a.date) - new Date(b.date));
+            let totalGaps = 0;
+            for(let i=1; i<allWashes.length; i++) {
+                totalGaps += (new Date(allWashes[i].date) - new Date(allWashes[i-1].date)) / 86400000;
+            }
+            const avgTotal = allWashes.length > 1 ? (totalGaps / (allWashes.length - 1)) : 0;
+
+            document.getElementById('avg-month').innerText = avgMonth > 0 ? this.formatAverage(avgMonth).replace('ogni ', '') : '-';
+            document.getElementById('avg-total').innerText = avgTotal > 0 ? this.formatAverage(avgTotal).replace('ogni ', '') : '-';
+            banner.style.display = 'flex';
+        } else {
+            banner.style.display = 'none';
+        }
+
+        body.innerHTML = '';
+        const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+        const days = new Date(year, month+1, 0).getDate();
+        for(let i=0; i<offset; i++) body.innerHTML += '<div></div>';
+        
+        for(let i=1; i<=days; i++) {
+            const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            const border = this.getBorderColor(dStr);
+            const dLogs = this.db.logs.filter(l => l.date === dStr);
+            body.innerHTML += `<div class="calendar-day ${dStr === new Date().toISOString().split('T')[0]?'today':''}" style="border-color:${border}" onclick="app.openDayModal('${dStr}')">
+                ${i}<div class="dots">${dLogs.map(l => `<div class="dot" style="background:${this.db.treatments.find(t=>t.id==l.treatId)?.color}"></div>`).join('')}</div>
+            </div>`;
+        }
+    },
+
+    // --- MODALS & FORMS ---
+    openDayModal(date) {
+        this.selectedDateForLog = date;
+        const logs = this.db.logs.filter(l => l.date === date);
+        document.getElementById('modal-date-title').innerText = new Date(date).toLocaleDateString('it-IT', { day:'numeric', month:'long' });
+        
+        document.getElementById('modal-existing-logs').innerHTML = logs.map(l => {
+            const t = this.db.treatments.find(x => x.id == l.treatId);
+            return `<div class="card" style="margin-bottom:15px; padding:15px; border-left:4px solid ${t?.color}; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:1.1rem; font-weight:500;">${t?.emoji} ${t?.name}</span>
+                <button class="icon-btn delete" onclick="app.deleteLog(${l.id})"><i class="fas fa-trash"></i></button></div>`;
+        }).join('') || '<p style="color:var(--text-light); text-align:center; padding: 10px;">Nessuna attività registrata in questa data.</p>';
+        
+        document.getElementById('reg-treatment-select').innerHTML = '<option value="" disabled selected>Seleziona un trattamento...</option>' + this.db.treatments.map(t=>`<option value="${t.id}">${t.emoji} ${t.name}</option>`).join('');
+        document.getElementById('reg-dynamic-content').innerHTML = '';
+        document.getElementById('modal').style.display = 'flex';
+    },
+
+    renderDynamicRegisterForm() {
+        const tId = document.getElementById('reg-treatment-select').value;
+        const cont = document.getElementById('reg-dynamic-content'); if(!tId) return;
+        const t = this.db.treatments.find(x => x.id == tId);
+        const prods = this.db.products.filter(p => p.treatIds.includes(tId.toString()) || p.treatIds.includes(parseInt(tId)));
+        
+        let html = '<h4>Prodotti</h4><div class="checkbox-group">';
+        if(prods.length === 0) html += `<p style="grid-column: span 2; color:var(--text-light); font-size:0.9rem; margin:0;">Nessun prodotto compatibile.</p>`;
+        
+        prods.forEach(p => html += `<label class="check-container"><input type="checkbox" class="reg-prod-check" value="${p.id}"><span>${p.emoji} ${p.name}</span></label>`);
+        html += '</div>';
+        
+        t.sections.forEach(s => {
+            html += `<h4>${s.titolo}</h4><div class="checkbox-group">`;
+            s.opzioni.forEach(o => html += `<label class="check-container"><input type="checkbox" class="reg-custom-check" data-sec="${s.titolo}" value="${o}">${o}</label>`);
+            html += '</div>';
+        });
+        
+        html += '<textarea id="reg-notes" placeholder="Eventuali note libere..." rows="3"></textarea><button class="btn-submit" style="padding:18px;" onclick="app.saveLog()">Salva Sessione</button>';
+        cont.innerHTML = html;
+    },
+
+    saveLog() {
+        const tId = document.getElementById('reg-treatment-select').value;
+        this.db.logs.push({ 
+            id: Date.now(), 
+            date: this.selectedDateForLog, 
+            treatId: tId, 
+            products: Array.from(document.querySelectorAll('.reg-prod-check:checked')).map(el => el.value),
+            options: Array.from(document.querySelectorAll('.reg-custom-check:checked')).map(el => ({ sezione: el.dataset.sec, valore: el.value })),
+            notes: document.getElementById('reg-notes').value 
+        });
+        this.save();
+        this.openDayModal(this.selectedDateForLog);
+    },
+
+    deleteLog(id) { if(confirm("Eliminare questa registrazione?")) { this.db.logs = this.db.logs.filter(l => l.id != id); this.save(); this.openDayModal(this.selectedDateForLog); } },
+
+    // --- GESTIONE ---
+    renderEmojiGrids() {
+        document.getElementById('treat-emoji-grid').innerHTML = TREAT_EMOJIS.map(e => `<div class="emoji-item ${e===this.selectedTreatEmoji?'selected':''}" onclick="app.setEmoji('treat','${e}')">${e}</div>`).join('');
+        document.getElementById('prod-emoji-grid').innerHTML = PROD_EMOJIS.map(e => `<div class="emoji-item ${e===this.selectedProdEmoji?'selected':''}" onclick="app.setEmoji('prod','${e}')">${e}</div>`).join('');
+    },
+    setEmoji(t, e) { if(t==='treat') this.selectedTreatEmoji=e; else this.selectedProdEmoji=e; this.renderEmojiGrids(); },
+    renderColorPalette() {
+        const cont = document.getElementById('treat-colors');
+        const used = this.db.treatments.filter(t => t.id != this.editingTreatId).map(t => t.color);
+        cont.innerHTML = PASTEL_COLORS.map(c => `<div class="color-swatch ${used.includes(c)?'disabled':''} ${c===this.selectedColor?'selected':''}" style="background:${c}" onclick="app.selectColor('${c}', this)"></div>`).join('');
+    },
+    selectColor(c, el) { if(!el.classList.contains('disabled')) { this.selectedColor = c; this.renderColorPalette(); } },
+    addSectionToBuilder(t="", o="") {
+        const div = document.createElement('div'); div.className = 'section-builder-item';
+        div.innerHTML = `<input type="text" class="sb-title" placeholder="Titolo (es. Stato Capelli)" value="${t}"><input type="text" class="sb-options" placeholder="Opzioni (separate da virgola)" value="${o}">
+        <button class="icon-btn delete" onclick="this.parentElement.remove()" style="position:absolute; right:5px; top:5px;"><i class="fas fa-trash"></i></button>`;
+        document.getElementById('section-builder-container').appendChild(div);
+    },
+    saveTreatment() {
+        const n = document.getElementById('treat-name').value.trim();
+        const wash = document.getElementById('treat-is-wash').checked;
+        if(!n || !this.selectedColor) return alert("Inserisci Nome e Colore!");
+        if(wash) this.db.treatments.forEach(t => t.isWash = false);
+        const secs = Array.from(document.querySelectorAll('.section-builder-item')).map(i => ({ titolo: i.querySelector('.sb-title').value, opzioni: i.querySelector('.sb-options').value.split(',').map(x=>x.trim()).filter(x=>x) }));
+        if(this.editingTreatId) {
+            const idx = this.db.treatments.findIndex(x=>x.id == this.editingTreatId);
+            this.db.treatments[idx] = { id: this.editingTreatId, name: n, emoji: this.selectedTreatEmoji, color: this.selectedColor, isWash: wash, sections: secs };
+        } else { this.db.treatments.push({ id: Date.now(), name: n, emoji: this.selectedTreatEmoji, color: this.selectedColor, isWash: wash, sections: secs }); }
+        this.save();
+        this.resetTreatmentForm();
+    },
+    resetTreatmentForm() {
+        document.getElementById('treat-name').value = '';
+        document.getElementById('section-builder-container').innerHTML = '';
+        this.addSectionToBuilder();
+        this.editingTreatId = null;
+        document.getElementById('treat-form-title').innerText = "Crea Trattamento";
+    },
+    saveProduct() {
+        const n = document.getElementById('prod-name').value.trim();
+        const tIds = Array.from(document.querySelectorAll('.prod-treat-check:checked')).map(el => el.value);
+        if(!n || !tIds.length) return alert("Inserisci Nome e almeno una categoria compatibile!");
+        this.db.products.push({ id: Date.now(), name: n, brand: document.getElementById('prod-brand').value, emoji: this.selectedProdEmoji, treatIds: tIds });
+        this.save();
+        document.getElementById('prod-name').value = '';
+        document.querySelectorAll('.prod-treat-check').forEach(el=>el.checked=false);
+    },
+    renderAll() { this.renderDashboard(); this.renderCalendar(); this.renderLists(); },
+    renderLists() {
+        document.getElementById('treatments-list').innerHTML = this.db.treatments.map(t => `<div class="card" style="border-left:4px solid ${t.color}; display:flex; justify-content:space-between; align-items:center">
+            <span style="font-size:1.1rem; font-weight:500;">${t.emoji} ${t.name}</span>
+            <div><button class="icon-btn edit" onclick="app.editTreatment(${t.id})"><i class="fas fa-pencil"></i></button><button class="icon-btn delete" onclick="app.delete('treatments', ${t.id})"><i class="fas fa-trash"></i></button></div>
+        </div>`).join('');
+        document.getElementById('products-list').innerHTML = this.db.products.map(p => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:1.1rem;">${p.emoji} ${p.name} <span style="color:var(--text-light); font-size:0.9rem;">${p.brand}</span></span>
+            <button class="icon-btn delete" onclick="app.delete('products', ${p.id})"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+        const pCont = document.getElementById('prod-treatments-checkboxes');
+        if(pCont) pCont.innerHTML = this.db.treatments.map(t => `<label class="check-container"><input type="checkbox" class="prod-treat-check" value="${t.id}">${t.emoji} ${t.name}</label>`).join('');
+    },
+    editTreatment(id) {
+        const t = this.db.treatments.find(x=>x.id==id);
+        this.editingTreatId = t.id;
+        document.getElementById('treat-form-title').innerText = "Modifica Trattamento";
+        document.getElementById('treat-name').value = t.name;
+        document.getElementById('treat-is-wash').checked = t.isWash;
+        this.setEmoji('treat', t.emoji); this.selectedColor = t.color;
+        this.renderColorPalette();
+        document.getElementById('section-builder-container').innerHTML = '';
+        t.sections.forEach(s => this.addSectionToBuilder(s.titolo, s.opzioni.join(', ')));
+        document.getElementById('view-manage').scrollIntoView({behavior: "smooth"});
+    },
+    delete(type, id) { if(confirm("Sei sicuro di voler eliminare definitivamente questo elemento?")) { this.db[type] = this.db[type].filter(x => x.id != id); this.save(); } },
+    switchManage(v) { document.getElementById('manage-main').style.display = (v==='main')?'flex':'none'; document.getElementById('manage-treatments').style.display = (v==='treatments')?'block':'none'; document.getElementById('manage-products').style.display = (v==='products')?'block':'none'; }
+};
+app.init();
+</script>
+</body>
+</html>

@@ -109,9 +109,9 @@
         .dots { display: flex; gap: 3px; margin-top: 4px; height: 6px; justify-content: center; }
         .dot { width: 6px; height: 6px; border-radius: 50%; }
 
-        .wash-banner { background: var(--lavanda); border-radius: 12px; padding: 12px; font-size: 0.9rem; margin-bottom: 15px; color: var(--text-dark); display: flex; justify-content: space-evenly; align-items: center; box-shadow: var(--shadow-soft); }
+        .wash-banner { background: var(--azzurro-polvere); border-radius: 12px; padding: 12px; font-size: 0.9rem; margin-bottom: 15px; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center;}
         .wash-banner > div { text-align: center; flex: 1; }
-        .wash-banner-divider { width: 1px; background: var(--pervinca); align-self: stretch; opacity: 0.5; margin: 0 10px; }
+        .wash-banner-divider { width: 1px; background: var(--pervinca); height: 35px; opacity: 0.5; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: flex-end; justify-content: center; z-index: 2000; padding-bottom: max(30px, env(safe-area-inset-bottom)); }
         .modal-content { background: white; width: 95%; max-width: 500px; padding: 25px; border-radius: 30px; max-height: 85vh; overflow-y: auto; position: relative; animation: slideUp 0.3s ease; }
@@ -231,7 +231,7 @@
             </div>
 
             <div class="card" id="prod-form-card" style="display:none; border: 2px solid var(--pervinca);">
-                <h2 style="margin-top:0;">Nuovo Prodotto</h2>
+                <h2 id="prod-form-title" style="margin-top:0;">Nuovo Prodotto</h2>
                 <input type="text" id="prod-name" placeholder="Nome Prodotto">
                 <input type="text" id="prod-brand" placeholder="Marca">
                 <label>Icona</label>
@@ -297,6 +297,7 @@ const app = {
     calendarDate: new Date(), 
     selectedDateForLog: null,
     editingTreatId: null,
+    editingProdId: null, // Aggiunto tracker per modifica prodotti
     editingLogId: null, 
 
     init() {
@@ -614,6 +615,7 @@ const app = {
         if(!used.includes(c)) { this.selectedColor = c; this.renderColorPalette(); } 
     },
     
+    // Form Trattamenti
     openTreatForm() {
         document.getElementById('treat-add-btn-container').style.display = 'none';
         document.getElementById('treat-form-card').style.display = 'block';
@@ -624,6 +626,7 @@ const app = {
         this.resetTreatmentForm();
     },
 
+    // Form Prodotti
     openProdForm() {
         document.getElementById('prod-add-btn-container').style.display = 'none';
         document.getElementById('prod-form-card').style.display = 'block';
@@ -634,6 +637,8 @@ const app = {
         document.getElementById('prod-name').value = '';
         document.getElementById('prod-brand').value = '';
         document.querySelectorAll('.prod-treat-check').forEach(el=>el.checked=false);
+        this.editingProdId = null;
+        document.getElementById('prod-form-title').innerText = "Nuovo Prodotto";
     },
 
     addSectionToBuilder(t="", opts=[]) {
@@ -697,8 +702,15 @@ const app = {
     saveProduct() {
         const nProd = document.getElementById('prod-name').value.trim(); 
         const tIds = Array.from(document.querySelectorAll('.prod-treat-check:checked')).map(el => el.value);
-        if(!nProd || !tIds.length) return alert("Inserisci Nome e Categorie compatibili!");
-        this.db.products.push({ id: Date.now(), name: nProd, brand: document.getElementById('prod-brand').value.trim(), emoji: this.selectedProdEmoji, treatIds: tIds });
+        if(!nProd || !tIds.length) return alert("Inserisci Nome e almeno una Categoria compatibile!");
+        
+        if (this.editingProdId) {
+            const idx = this.db.products.findIndex(x => x.id == this.editingProdId);
+            this.db.products[idx] = { id: this.editingProdId, name: nProd, brand: document.getElementById('prod-brand').value.trim(), emoji: this.selectedProdEmoji, treatIds: tIds };
+        } else {
+            this.db.products.push({ id: Date.now(), name: nProd, brand: document.getElementById('prod-brand').value.trim(), emoji: this.selectedProdEmoji, treatIds: tIds });
+        }
+        
         this.save(); 
         this.closeProdForm();
     },
@@ -708,12 +720,20 @@ const app = {
     renderLists() {
         document.getElementById('treatments-list').innerHTML = this.db.treatments.map(t => `<div class="card" style="border-left:4px solid ${t.color}; display:flex; justify-content:space-between; align-items:center">
             <span style="font-size:1.1rem; font-weight:500;">${t.emoji} ${t.name}</span>
-            <div><button class="icon-btn edit" onclick="app.editTreatment(${t.id})"><i class="fas fa-pencil"></i></button><button class="icon-btn delete" onclick="app.delete('treatments', ${t.id})"><i class="fas fa-trash"></i></button></div>
+            <div style="display:flex;">
+                <button class="icon-btn edit" onclick="app.editTreatment(${t.id})"><i class="fas fa-pencil"></i></button>
+                <button class="icon-btn delete" onclick="app.delete('treatments', ${t.id})"><i class="fas fa-trash"></i></button>
+            </div>
         </div>`).join('');
+        
         document.getElementById('products-list').innerHTML = this.db.products.map(p => `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:1.1rem;">${p.emoji} ${p.name} <span style="color:var(--text-light); font-size:0.9rem;">${p.brand}</span></span>
-            <button class="icon-btn delete" onclick="app.delete('products', ${p.id})"><i class="fas fa-trash"></i></button>
+            <div style="display:flex;">
+                <button class="icon-btn edit" onclick="app.editProduct(${p.id})"><i class="fas fa-pencil"></i></button>
+                <button class="icon-btn delete" onclick="app.delete('products', ${p.id})"><i class="fas fa-trash"></i></button>
+            </div>
         </div>`).join('');
+        
         const pCont = document.getElementById('prod-treatments-checkboxes');
         if(pCont) pCont.innerHTML = this.db.treatments.map(t => `<label class="check-container"><input type="checkbox" class="prod-treat-check" value="${t.id}">${t.emoji} ${t.name}</label>`).join('');
     },
@@ -731,6 +751,27 @@ const app = {
         t.sections.forEach(s => this.addSectionToBuilder(s.titolo, s.opzioni));
         
         this.openTreatForm();
+        document.getElementById('view-manage').scrollIntoView({behavior: "smooth"});
+    },
+
+    // Nuova funzione per modificare i prodotti
+    editProduct(id) {
+        const p = this.db.products.find(x => x.id == id);
+        this.editingProdId = p.id;
+        
+        document.getElementById('prod-form-title').innerText = "Modifica Prodotto";
+        document.getElementById('prod-name').value = p.name;
+        document.getElementById('prod-brand').value = p.brand;
+        
+        this.setEmoji('prod', p.emoji);
+        
+        // Spunta le checkbox corrette basate sui treatIds salvati
+        document.querySelectorAll('.prod-treat-check').forEach(el => {
+            // Controlla sia se è salvato come stringa che come numero
+            el.checked = p.treatIds.includes(el.value) || p.treatIds.includes(parseInt(el.value));
+        });
+
+        this.openProdForm();
         document.getElementById('view-manage').scrollIntoView({behavior: "smooth"});
     },
 

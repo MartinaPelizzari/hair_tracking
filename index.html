@@ -2,8 +2,8 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Hair Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit=cover">
+    <title>Hair Tracker Pro</title>
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -26,12 +26,12 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-panna); color: var(--text-dark); margin: 0; padding: 0; line-height: 1.6; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: var(--bg-panna); color: var(--text-dark); margin: 0; padding: 0; line-height: 1.6; touch-action: manipulation; }
         
         #app { 
             max-width: 500px; 
             margin: 0 auto; 
-            padding: max(30px, env(safe-area-inset-top)) 20px calc(150px + env(safe-area-inset-bottom)) 20px; 
+            padding: max(30px, env(safe-area-inset-top)) 20px calc(130px + env(safe-area-inset-bottom)) 20px; 
         }
         
         header { margin-bottom: 25px; }
@@ -77,7 +77,7 @@
         }
 
         .bottom-nav {
-            position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: calc(15px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             width: 90%; max-width: 350px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
             display: flex; justify-content: space-around; align-items: center; padding: 12px 20px; border-radius: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); z-index: 1000;
         }
@@ -98,24 +98,29 @@
         .emoji-item.selected { background: var(--azzurro-polvere); border-color: var(--pervinca); transform: scale(1.1); }
 
         .cal-header { display: flex; justify-content: space-between; align-items: center; font-weight: 600; margin-bottom: 15px; }
-        .cal-nav { background: none; border: none; font-size: 1.4rem; color: var(--pervinca); cursor: pointer; padding: 15px; }
+        .cal-nav { background: none; border: none; font-size: 1.8rem; color: var(--pervinca); cursor: pointer; padding: 10px 20px; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; }
         .calendar-day { 
             aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
             font-size: 0.9rem; border-radius: 12px; cursor: pointer; position: relative; background: var(--bg-panna); border: 2.5px solid transparent; transition: 0.2s;
         }
-        .calendar-day.today { font-weight: bold; background: var(--azzurro-leggero); border: 1.5px solid #d1e3f8; }
+        .calendar-day.today { font-weight: bold; background: var(--azzurro-leggero); border: 4px solid #cce0ff; }
         .dots { display: flex; gap: 3px; margin-top: 4px; height: 6px; justify-content: center; }
         .dot { width: 6px; height: 6px; border-radius: 50%; }
 
-        .wash-banner { background: var(--azzurro-polvere); border-radius: 12px; padding: 12px; font-size: 0.9rem; margin-bottom: 15px; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center;}
+        /* Banner Calendario Compatto */
+        .wash-banner { 
+            background: var(--azzurro-polvere); 
+            border-radius: 12px; padding: 12px; font-size: 0.9rem; margin-bottom: 15px; 
+            color: var(--text-dark); display: flex; justify-content: space-between; align-items: center;
+        }
         .wash-banner > div { text-align: center; flex: 1; }
         .wash-banner-divider { width: 1px; background: var(--pervinca); height: 35px; opacity: 0.5; }
 
         .modal-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); 
             display: none; align-items: flex-end; justify-content: center; z-index: 2000; 
-            padding-bottom: max(40px, env(safe-area-inset-bottom)); 
+            padding-bottom: max(30px, env(safe-area-inset-bottom)); 
         }
         .modal-content { background: white; width: 95%; max-width: 500px; padding: 25px; border-radius: 30px; max-height: 85vh; overflow-y: auto; position: relative; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -160,7 +165,7 @@
         <div class="card">
             <div class="cal-header">
                 <button class="cal-nav" onclick="app.changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-                <div id="calendar-month-name" style="font-size: 1.1rem;"></div>
+                <div id="calendar-month-name" style="font-size: 1.2rem;"></div>
                 <button class="cal-nav" onclick="app.changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
             </div>
             <div style="display:grid; grid-template-columns: repeat(7, 1fr); text-align:center; font-size:0.75rem; color:var(--text-light); margin-bottom:8px; font-weight:bold;">
@@ -244,25 +249,18 @@
         <i class="fas fa-magic" style="font-size: 3.5rem; color: var(--pervinca); margin-bottom: 15px;"></i>
         <h2>Benvenuta!</h2>
         <p>Inserisci il tuo nome per iniziare.</p>
-        <input type="text" id="user-name-input" placeholder="Il tuo nome" style="text-align: center; font-size:1.2rem;">
+        <input type="text" id="user-name-input" placeholder="Il tuo nome" style="text-align: center; font-size:1.2rem;" onkeydown="if(event.key === 'Enter') app.saveName()">
         <button class="btn-submit" onclick="app.saveName()">Inizia</button>
     </div>
 </div>
 
 <script>
-const TREAT_EMOJIS = ['🚿','🛁','✂️','💇‍♀️','💆‍♀️','🧖‍♀️','🪮','💈','🥣','🧴','💅','🔫']; 
-const PROD_EMOJIS = ['🧴','🧼','🫧','💊','🥥','🍯','🥑','🍋','🌸','🧽','💦','🥣'];
+const TREAT_EMOJIS = ['🚿','🛁','✂️','💇‍♀️','💆‍♀️','🧖‍♀️','🪮','🌬️','✨','🌿','💅','🖌️']; 
+const PROD_EMOJIS = ['🧴','🧼','🫧','🧪','🥥','🍯','🥑','🍋','🌸','🧽','💦','🏺'];
 
-// I TUOI 8 COLORI PASTELLO 
 const PASTEL_COLORS = [
-    '#AEC6CF', // Blu pastello
-    '#FFB6C1', // Rosso pastello
-    '#FFDAB9', // Arancione pastello
-    '#98FB98', // Verde pastello
-    '#E6E6FA', // Viola pastello
-    '#FFC0CB', // Rosa pastello
-    '#AFEEEE', // Azzurro pastello
-    '#8FBC8F'  // Verde pastello scuro
+    '#AEC6CF', '#FFB6C1', '#FFDAB9', '#98FB98', '#E6E6FA', '#FFC0CB', '#AFEEEE', '#8FBC8F',
+    '#FDFD96', '#B5EAD7', '#C7CEEA', '#FF9AA2', '#E2F0CB', '#E0BBE4'
 ];
 
 const MESSAGES_SUCCESS = ["Bravissima! Ottimo ritmo di pulizia. ✨", "I tuoi capelli ringraziano per questo intervallo perfetto. 🌿", "Ottima gestione della cute! 💧"];
@@ -306,14 +304,11 @@ const app = {
         document.getElementById(`view-${view}`).classList.add('active');
         if(e) e.currentTarget.classList.add('active');
         
-        // --- QUI SCEGLI I TITOLI DELLE TRE SCHERMATE ---
         const titles = { 
             'dashboard': 'Statistiche', 
             'calendar': 'Calendario', 
-            'manage': 'Impostazioni' 
+            'manage': 'Gestione' 
         };
-        // -----------------------------------------------
-
         document.getElementById('view-title').innerText = titles[view];
         this.renderAll();
     },
@@ -339,11 +334,11 @@ const app = {
             const washLogs = this.db.logs.filter(l => l.treatId == washT.id).sort((a,b) => new Date(b.date) - new Date(a.date));
             if(washLogs.length > 1) {
                 const today = new Date(); today.setHours(0,0,0,0);
-                const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 7);
+                const sevenDaysAgo = new Date(today); sevenDaysAgo.setDate(today.getDate() - 6); // Oggi + 6gg indietro
                 let gaps = [];
                 for(let i=0; i < washLogs.length - 1; i++) {
                     const d1 = new Date(washLogs[i].date);
-                    if(d1 >= sevenDaysAgo) gaps.push((d1 - new Date(washLogs[i+1].date)) / 86400000);
+                    if(d1 >= sevenDaysAgo && d1 <= today) gaps.push((d1 - new Date(washLogs[i+1].date)) / 86400000);
                 }
                 if(gaps.length) {
                     const avg = gaps.reduce((a,b)=>a+b,0) / gaps.length;
@@ -460,14 +455,24 @@ const app = {
         
         document.getElementById('modal-existing-logs').innerHTML = logs.map(l => {
             const t = this.db.treatments.find(x => x.id == l.treatId);
-            return `<div class="card" style="margin-bottom:15px; padding:15px; border-left:4px solid ${t?.color}; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:1.1rem; font-weight:500;">${t?.emoji} ${t?.name}</span>
-                <div style="display:flex;">
-                    <button class="icon-btn edit" onclick="app.editLog(${l.id})"><i class="fas fa-pencil"></i></button>
-                    <button class="icon-btn delete" onclick="app.deleteLog(${l.id})"><i class="fas fa-trash"></i></button>
+            const productsHtml = l.products.length ? `<div style="margin-top:8px; font-size:0.9rem;"><strong>Prodotti:</strong> ${l.products.map(pId => this.db.products.find(px=>px.id==pId)?.name).filter(Boolean).join(', ')}</div>` : '';
+            const optionsHtml = l.options.length ? `<div style="margin-top:4px; color:var(--text-light); font-size:0.85rem;">${l.options.map(o => `✓ ${o.valore}`).join(' | ')}</div>` : '';
+            const notesHtml = l.notes ? `<div style="margin-top:6px; font-style:italic; font-size:0.9rem;">"${l.notes}"</div>` : '';
+
+            return `
+            <div class="card" style="margin-bottom:15px; padding:15px; border-left:4px solid ${t?.color};">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:1.15rem; font-weight:600;">${t?.emoji} ${t?.name}</span>
+                    <div style="display:flex;">
+                        <button class="icon-btn edit" onclick="app.editLog(${l.id})" style="padding:8px;"><i class="fas fa-pencil"></i></button>
+                        <button class="icon-btn delete" onclick="app.deleteLog(${l.id})" style="padding:8px;"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
+                ${productsHtml}
+                ${optionsHtml}
+                ${notesHtml}
             </div>`;
-        }).join('') || '<p style="color:var(--text-light); text-align:center; padding: 10px;">Nessuna attività registrata.</p>';
+        }).join('') || '<p style="color:var(--text-light); text-align:center; padding: 10px;">Nessuna attività registrata in questa data.</p>';
         
         document.getElementById('reg-form-title').innerText = "+ Registra Nuova Attività";
         document.getElementById('reg-treatment-select').innerHTML = '<option value="" disabled selected>Seleziona un trattamento...</option>' + this.db.treatments.map(t=>`<option value="${t.id}">${t.emoji} ${t.name}</option>`).join('');
@@ -502,7 +507,8 @@ const app = {
         const btn = document.querySelector('#reg-dynamic-content .btn-submit');
         if(btn) {
             btn.innerText = "Aggiorna Sessione";
-            btn.style.background = "#3498db";
+            btn.style.background = "var(--color-warning)";
+            btn.style.color = "var(--text-dark)";
         }
     },
 
@@ -512,7 +518,7 @@ const app = {
         const t = this.db.treatments.find(x => x.id == tId);
         const prods = this.db.products.filter(p => p.treatIds.includes(tId.toString()) || p.treatIds.includes(parseInt(tId)));
         
-        let html = '<h4>Prodotti</h4><div class="checkbox-group">';
+        let html = '<h4>Prodotti Usati</h4><div class="checkbox-group">';
         if(prods.length === 0) html += `<p style="grid-column: span 2; color:var(--text-light); font-size:0.9rem; margin:0;">Nessun prodotto compatibile.</p>`;
         prods.forEach(p => html += `<label class="check-container"><input type="checkbox" class="reg-prod-check" value="${p.id}"><span>${p.emoji} ${p.name}</span></label>`);
         html += '</div>';
@@ -523,7 +529,7 @@ const app = {
             html += '</div>';
         });
         
-        html += `<textarea id="reg-notes" placeholder="Eventuali note libere..." rows="3"></textarea>
+        html += `<textarea id="reg-notes" placeholder="Aggiungi una nota (es. risultati, quantità usata...)" rows="3"></textarea>
                  <button class="btn-submit" style="padding:18px;" onclick="app.saveLog()">Salva Sessione</button>`;
         cont.innerHTML = html;
     },
@@ -536,7 +542,7 @@ const app = {
             treatId: tId, 
             products: Array.from(document.querySelectorAll('.reg-prod-check:checked')).map(el => el.value),
             options: Array.from(document.querySelectorAll('.reg-custom-check:checked')).map(el => ({ sezione: el.dataset.sec, valore: el.value })),
-            notes: document.getElementById('reg-notes').value 
+            notes: document.getElementById('reg-notes').value.trim() 
         };
 
         if(this.editingLogId) {
@@ -575,6 +581,7 @@ const app = {
         const used = this.db.treatments.filter(t => t.id != this.editingTreatId).map(t => t.color);
         if(!used.includes(c)) { this.selectedColor = c; this.renderColorPalette(); } 
     },
+    
     addSectionToBuilder(t="", opts=[]) {
         const div = document.createElement('div'); div.className = 'section-builder-item';
         const pillsHtml = Array.isArray(opts) ? opts.map(o => `<span class="option-pill" data-val="${o}">${o} <i class="fas fa-times" onclick="this.parentElement.remove()"></i></span>`).join('') : '';
@@ -584,7 +591,7 @@ const app = {
                 <button class="icon-btn delete" onclick="this.parentElement.parentElement.remove()" style="margin-left:10px; padding:8px;"><i class="fas fa-trash"></i></button>
             </div>
             <div style="display:flex; gap:10px; margin-bottom:15px;">
-                <input type="text" class="sb-new-option" placeholder="Nuova opzione" style="margin:0; padding:10px 15px; flex:1;">
+                <input type="text" class="sb-new-option" placeholder="Nuova opzione (premi Invio)" style="margin:0; padding:10px 15px; flex:1;" onkeydown="if(event.key === 'Enter') { event.preventDefault(); app.addOptionToPills(this.nextElementSibling); }">
                 <button type="button" onclick="app.addOptionToPills(this)" style="background:var(--pervinca); color:white; border:none; border-radius:12px; padding:0 20px; cursor:pointer;"><i class="fas fa-plus"></i></button>
             </div>
             <div class="sb-options-list" style="display:flex; flex-wrap:wrap; gap:8px;">${pillsHtml}</div>
@@ -648,7 +655,7 @@ const app = {
         t.sections.forEach(s => this.addSectionToBuilder(s.titolo, s.opzioni));
         document.getElementById('view-manage').scrollIntoView({behavior: "smooth"});
     },
-    delete(type, id) { if(confirm("Eliminare definitivamente?")) { this.db[type] = this.db[type].filter(x => x.id != id); this.save(); } },
+    delete(type, id) { if(confirm("Sei sicuro di voler eliminare definitivamente questo elemento?")) { this.db[type] = this.db[type].filter(x => x.id != id); this.save(); } },
     switchManage(v) { document.getElementById('manage-main').style.display = (v==='main')?'flex':'none'; document.getElementById('manage-treatments').style.display = (v==='treatments')?'block':'none'; document.getElementById('manage-products').style.display = (v==='products')?'block':'none'; }
 };
 app.init();
